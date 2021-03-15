@@ -1,0 +1,516 @@
+---
+title: "Introduction to R"
+subtitle: "Import and Clean Data in R"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: [default, hygge, ninjutsu]
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+
+```{r, include = FALSE}
+# This is the recommended set up for flipbooks
+# you might think about setting cache to TRUE as you gain practice --- building flipbooks from scratch can be time consuming
+knitr::opts_chunk$set(fig.width = 6, message = FALSE, warning = FALSE, comment = "", cache = F)
+
+library(flipbookr)
+library(tidyverse)
+library(here)
+library(haven)
+```
+
+## Welcome!
+
+This tutorial will demonstrate how to get started in R and R Studio
+
+To follow along with the workshop in R, you will need to have **already installed** R and R Studio
+
+---
+
+## How to follow along and participate
+
+* Open R Studio
+
+* Install the `tidyverse`, `rmarkdown`, `haven`, and `here` packages (if you haven't already)
+
+    + Use the `Tools` menu and choose the `Install packages...` menu choice 
+
+    + Type the names of the packages, `tidyverse, rmarkdown`, in the dialog box that opens and click Install
+
+* Open the workshop R Markdown file and click on the **tiny** green arrow on the top right corner of the gray shaded area (this is a code chunk!) that contains this: 
+
+```{r eval = FALSE}
+library(package = "here")
+library(package = "tidyverse")
+library(package = "haven")
+```
+
+* The arrow will run all the code in that "chunk" of code
+
+* Throughout the workshop you will be able to run the code from the demonstration by clicking the arrow on the top right in the corresponding code chunk
+
+* In between code chunks, you can type as you would in a Word document if you'd like to take notes
+
+* For the exercises you may have to finish the code yourself and then click the arrow to get the anticipated result
+
+---
+
+## Why are we doing this?
+
+* R is open source and free 
+
+* R can do everything that SPSS and SAS can do 
+
+* R is especially great for data visualization 
+
+* The R community is supportive and active 
+
+---
+
+## The data set
+
+* We will be using the **Global Attitudes & Trends** data set from the **Pew Internet & American Life** website 
+
+    + If needed, download the data and documentation from this website: <a href = "https://www.pewresearch.org/global/datasets/">https://www.pewresearch.org/global/datasets/</a>
+    
+---
+
+## Importing data into R
+
+* Before running this code, make sure the participant file and the data file are saved in the same folder on your computer
+
+```{r}
+# use here so that R looks in the same folder you are in
+here()
+
+# use read_sav function to read the spss file 
+globalData2019 <- read_spss(file = "Pew Research Center Global Attitudes Spring 2019 Dataset WEB.sav")
+```
+
+---
+
+## Examining the data set 
+
+* After importing the data you should see **globalData2019** in your **Environment** tab 
+
+* Next to the name you gave to the data, **globalData2019**, you will see `r nrow(globalData2019)` obs. of `r ncol(globalData2019)` variables 
+
+    + This means there are `r nrow(globalData2019)` observations, which in this case are the survey participants 
+    
+    + It also means there are `r ncol(globalData2019)` variables 
+    
+* The codebook for these data describe the `r ncol(globalData2019)` variables
+
+* Click one time on the name of the data **globalData2019**, and it will pop-up in a data viewer tab in the **Console** pane
+
+---
+
+## Choosing some variables and observations to examine 
+
+* Making a smaller dataset is often useful if there is a subset of people you are interested in, or even just to make the data easier to easily view
+
+* For this workshop, we will choose:
+
+    + 7 variables: SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY
+    
+    + Observations from Nigeria (country 21)
+
+---
+
+`r chunk_reveal("small_data", widths = c(1,0), title = "## Selecting variables and filtering observations")`
+
+```{r small_data, include = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) 
+
+```
+
+---
+
+## Examining the smaller data set
+
+```{r}
+summary(object = globalData2019clean)
+```
+
+---
+
+## Planning data cleaning 
+
+* All of these variables except `AGE` should be categorical, which is a **factor** data type in R 
+
+* The way the variables are shown in the `summary()` indicates R thinks they are **numeric** data type 
+
+* Most of these variables also have categories or responses like **Don't know** or **Refused** that are probably not useful for analysis 
+
+* Data cleaning should include: 
+
+    + Changing the categorical variables into the factor type 
+    
+    + Recoding the responses like **Don't know** or **Refused** to be `NA` in R
+    
+        + `NA` stands for **Not Available** in R and is how a missing value is recorded 
+
+---
+
+`r chunk_reveal("data_types", widths = c(1,0), title = "## Changing data types 1")`
+
+```{r data_types, include = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female'))
+```
+
+---
+
+## Checking your work 1
+
+```{r}
+summary(object = globalData2019clean)
+```
+
+---
+
+`r chunk_reveal("data_types2", widths = c(1,0), title = "## Changing data types 2")`
+
+```{r data_types2, include = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %>% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                       '1' = 'Men',
+                                       '2' = 'Women',
+                                       '3' = 'Same/both equally',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_))
+```
+
+---
+
+## Checking your work 2
+
+```{r}
+summary(object = globalData2019clean)
+```
+
+---
+
+`r chunk_reveal("data_types3", widths = c(1,0), title = "## Changing data types 3")`
+
+```{r data_types3, include = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %>% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                    '1' = 'Men',
+                                    '2' = 'Women',
+                                    '3' = 'Same/both equally',
+                                    '8' = NA_character_,
+                                    '9' = NA_character_)) %>% 
+  mutate(COUNTRY_SATIS = recode_factor(COUNTRY_SATIS,
+                                       '1' = 'Satisfied',
+                                       '2' = 'Dissatisfied',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_))
+```
+
+---
+
+## Checking your work 3
+
+```{r}
+summary(object = globalData2019clean)
+```
+
+---
+
+## Recoding data: You Try It!
+
+* Look in the codebook to find the variable for **ECON_SIT** (note: it will be lower case in the codebook)
+
+* Add recoding of **ECON_SIT** to the code below and run the code 
+
+* Run the `summary()` code in the next code chunk to check your work
+
+```{r include = FALSE, echo = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %>% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                    '1' = 'Men',
+                                    '2' = 'Women',
+                                    '3' = 'Same/both equally',
+                                    '8' = NA_character_,
+                                    '9' = NA_character_)) %>% 
+  mutate(COUNTRY_SATIS = recode_factor(COUNTRY_SATIS,
+                                       '1' = 'Satisfied',
+                                       '2' = 'Dissatisfied',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_)) 
+```
+
+
+```{r echo = FALSE, include = FALSE}
+# check your work
+summary(object = globalData2019clean)
+```
+
+---
+
+`r chunk_reveal("you_try_key", widths = c(1,0), title = "## Answer to You Try It!")`
+
+```{r you_try_key, include = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %>% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                    '1' = 'Men',
+                                    '2' = 'Women',
+                                    '3' = 'Same/both equally',
+                                    '8' = NA_character_,
+                                    '9' = NA_character_)) %>% 
+  mutate(COUNTRY_SATIS = recode_factor(COUNTRY_SATIS,
+                                       '1' = 'Satisfied',
+                                       '2' = 'Dissatisfied',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_)) %>% 
+  mutate(ECON_SIT = recode_factor(ECON_SIT,
+                                  '1' = 'Very good',
+                                  '2' = 'Somewhat good',
+                                  '3' = 'Somewhat bad',
+                                  '4' = 'Very bad',
+                                  '8' = NA_character_,
+                                  '9' = NA_character_))
+```
+
+---
+
+## Check your work: You Try It!
+
+* If the code ran properly, you should expect to see the four categories listed under the `ECON_SIT` variable name
+
+* If you do not see this, go back to your code and look for missing commas and other punctuation problems 
+
+```{r}
+summary(object = globalData2019clean)
+```
+
+---
+
+## Try Some More! 
+
+* Recode the last two categorical variables, `BELIEVE_GOD` and `GLOBAL_COMMUNITY` to have appropriate category labels and `NA` 
+
+* Use the codebook to find the labels you need 
+
+* Add to the existing code: 
+
+```{r include = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %>% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                    '1' = 'Men',
+                                    '2' = 'Women',
+                                    '3' = 'Same/both equally',
+                                    '8' = NA_character_,
+                                    '9' = NA_character_)) %>% 
+  mutate(COUNTRY_SATIS = recode_factor(COUNTRY_SATIS,
+                                       '1' = 'Satisfied',
+                                       '2' = 'Dissatisfied',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_)) %>% 
+  mutate(ECON_SIT = recode_factor(ECON_SIT,
+                                  '1' = 'Very good',
+                                  '2' = 'Somewhat good',
+                                  '3' = 'Somewhat bad',
+                                  '4' = 'Very bad',
+                                  '8' = NA_character_,
+                                  '9' = NA_character_))
+```
+
+---
+
+## Check your work: Try Some More!
+
+
+* If the code ran properly, you should expect to see the categories listed under the variable names
+
+* If you do not see this, go back to your code and look for missing commas and other punctuation problems 
+
+
+---
+
+`r chunk_reveal("try_more_key", widths = c(1,0), title = "## Answer to Try Some More!")`
+
+```{r try_more_key, include = FALSE}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %>% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                    '1' = 'Men',
+                                    '2' = 'Women',
+                                    '3' = 'Same/both equally',
+                                    '8' = NA_character_,
+                                    '9' = NA_character_)) %>% 
+  mutate(COUNTRY_SATIS = recode_factor(COUNTRY_SATIS,
+                                       '1' = 'Satisfied',
+                                       '2' = 'Dissatisfied',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_)) %>% 
+  mutate(ECON_SIT = recode_factor(ECON_SIT,
+                                  '1' = 'Very good',
+                                  '2' = 'Somewhat good',
+                                  '3' = 'Somewhat bad',
+                                  '4' = 'Very bad',
+                                  '8' = NA_character_,
+                                  '9' = NA_character_)) %>% 
+  mutate(BELIEVE_GOD = recode_factor(BELIEVE_GOD,
+                                     '1' = 'It is not necessary to believe in God in order to be moral and have good values',
+                                     '2' = 'It is necessary to believe in God in order to be moral and have good values',
+                                     '8' = NA_character_,
+                                     '9' = NA_character_)) %>% 
+  mutate(GLOBAL_COMMUNITY = recode_factor(GLOBAL_COMMUNITY,
+                                          '1' = 'Part of a global community that works together to solve problems',
+                                          '2' = 'Independent nations that compete with other countries and pursue their own interests',
+                                          '3' = 'Both',
+                                          '4' = 'Neither',
+                                          '8' = NA_character_,
+                                          '9' = NA_character_))
+```
+
+---
+
+## Check your work: Try Some More!
+
+```{r}
+summary(object = globalData2019clean)
+```
+
+---
+
+## Final recoding for age
+
+```{r}
+globalData2019clean <- globalData2019 %>%
+  filter(country == 21) %>% 
+  select(SEX, AGE, BETTER_GENDER, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %>% 
+  zap_labels() %>%
+  mutate(AGE = na_if(AGE, 98)) %>% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %>% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                    '1' = 'Men',
+                                    '2' = 'Women',
+                                    '3' = 'Same/both equally',
+                                    '8' = NA_character_,
+                                    '9' = NA_character_)) %>% 
+  mutate(COUNTRY_SATIS = recode_factor(COUNTRY_SATIS,
+                                       '1' = 'Satisfied',
+                                       '2' = 'Dissatisfied',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_)) %>% 
+  mutate(ECON_SIT = recode_factor(ECON_SIT,
+                                  '1' = 'Very good',
+                                  '2' = 'Somewhat good',
+                                  '3' = 'Somewhat bad',
+                                  '4' = 'Very bad',
+                                  '8' = NA_character_,
+                                  '9' = NA_character_)) %>% 
+  mutate(BELIEVE_GOD = recode_factor(BELIEVE_GOD,
+                                     '1' = 'It is not necessary to believe in God in order to be moral and have good values',
+                                     '2' = 'It is necessary to believe in God in order to be moral and have good values',
+                                     '8' = NA_character_,
+                                     '9' = NA_character_)) %>% 
+  mutate(GLOBAL_COMMUNITY = recode_factor(GLOBAL_COMMUNITY,
+                                          '1' = 'Part of a global community that works together to solve problems',
+                                          '2' = 'Independent nations that compete with other countries and pursue their own interests',
+                                          '3' = 'Both',
+                                          '4' = 'Neither',
+                                          '8' = NA_character_,
+                                          '9' = NA_character_)) 
+
+```
+
+---
+
+## The end
+
+* Email me at [harrisj@wustl.edu](mailto:harrisj@wustl.edu)
+
+* Connect with me on Twitter [@jenineharris](https://twitter.com/jenineharris)
+
+
+
+
+<!-- adjust font size in this css code chunk, currently 80 -->
+
+```{css, eval = TRUE, echo = FALSE}
+.remark-code{line-height: 1.5; font-size: 80%}
+
+@media print {
+  .has-continuation {
+    display: block;
+  }
+}
+
+code.r.hljs.remark-code{
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+code.r.hljs.remark-code:hover{
+  overflow-x:visible;
+  width: 500px;
+  border-style: solid;
+}
+```
+
+
+
+
