@@ -1,0 +1,3758 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Introduction to R</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs-2.7/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/hygge.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/ninjutsu.css" rel="stylesheet" />
+    <link href="libs/table1-1.0/table1_defaults.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Introduction to R
+## Create Basic Tables and Figures in R
+
+---
+
+
+
+
+
+## Welcome!
+
+This tutorial will demonstrate how to create basic tables and graphs in R
+
+To follow along with the workshop in R, you will need to have **already installed** R and R Studio
+
+---
+
+## How to follow along and participate
+
+* Open R Studio
+
+* Install the `table1` package (you should have the `here`, `tidyverse`, and `foreign` from the prior workshop)
+
+* Open the workshop R Markdown file and click on the **tiny** green arrow on the top right corner of the gray shaded area (this is a code chunk!) that contains this: 
+
+
+```r
+library(package = "here")
+library(package = "tidyverse")
+library(package = "haven")
+library(package = "table1")
+```
+
+* The arrow will run all the code in that "chunk" of code
+
+---
+
+## The data set
+
+* We will be using the **Global Attitudes &amp; Trends** data set from the **Pew Internet &amp; American Life** website 
+
+    + If needed, download the data and documentation from this website: &lt;a href = "https://www.pewresearch.org/global/datasets/"&gt;https://www.pewresearch.org/global/datasets/&lt;/a&gt;
+    
+---
+
+## Importing data into R
+
+* Before running this code, make sure the participant file and the data file are saved in the same folder on your computer
+
+
+```r
+# use here so that R looks in the same folder you are in
+here()
+```
+
+```
+[1] "/Users/harrisj/Box/service/ACADEMIC-HIVE/AH-part1"
+```
+
+```r
+# use read_sav function to read the spss file 
+globalData2019 &lt;- read_spss(file = "Pew Research Center Global Attitudes Spring 2019 Dataset WEB.sav")
+```
+
+---
+
+## Data cleaning (see prior video)
+
+
+```r
+globalData2019clean &lt;- globalData2019 %&gt;%
+  filter(country == 21) %&gt;% 
+  select(SEX, AGE, BETTER_GENDER, LADDER_NOW, COUNTRY_SATIS, 
+         ECON_SIT, BELIEVE_GOD, GLOBAL_COMMUNITY) %&gt;% 
+  zap_labels() %&gt;% 
+  mutate(AGE = na_if(AGE, 98)) %&gt;% 
+  mutate(SEX = recode_factor(SEX,
+                             '1' = 'Male',
+                             '2' = 'Female')) %&gt;% 
+  mutate(BETTER_GENDER = recode_factor(BETTER_GENDER,
+                                    '1' = 'Men',
+                                    '2' = 'Women',
+                                    '3' = 'Same/both equally',
+                                    '8' = NA_character_,
+                                    '9' = NA_character_)) %&gt;% 
+  mutate(COUNTRY_SATIS = recode_factor(COUNTRY_SATIS,
+                                       '1' = 'Satisfied',
+                                       '2' = 'Dissatisfied',
+                                       '8' = NA_character_,
+                                       '9' = NA_character_)) %&gt;% 
+  mutate(ECON_SIT = recode_factor(ECON_SIT,
+                                  '1' = 'Very good',
+                                  '2' = 'Somewhat good',
+                                  '3' = 'Somewhat bad',
+                                  '4' = 'Very bad',
+                                  '8' = NA_character_,
+                                  '9' = NA_character_)) %&gt;% 
+  mutate(BELIEVE_GOD = recode_factor(BELIEVE_GOD,
+                                     '1' = 'It is not necessary to believe in God in order to be moral and have good values',
+                                     '2' = 'It is necessary to believe in God in order to be moral and have good values',
+                                     '8' = NA_character_,
+                                     '9' = NA_character_)) %&gt;% 
+  mutate(GLOBAL_COMMUNITY = recode_factor(GLOBAL_COMMUNITY,
+                                          '1' = 'Part of a global community that works together to solve problems',
+                                          '2' = 'Independent nations that compete with other countries and pursue their own interests',
+                                          '3' = 'Both',
+                                          '4' = 'Neither',
+                                          '8' = NA_character_,
+                                          '9' = NA_character_)) 
+```
+
+---
+
+## Check your work
+
+
+```r
+summary(object = globalData2019clean)
+```
+
+```
+     SEX           AGE                  BETTER_GENDER   LADDER_NOW    
+ Male  :572   Min.   :18.00   Men              :448   Min.   : 0.000  
+ Female:423   1st Qu.:23.25   Women            :231   1st Qu.: 4.000  
+              Median :30.00   Same/both equally:283   Median : 6.000  
+              Mean   :32.32   NA's             : 33   Mean   : 8.238  
+              3rd Qu.:38.00                           3rd Qu.: 8.500  
+              Max.   :92.00                           Max.   :99.000  
+              NA's   :1                                               
+      COUNTRY_SATIS          ECON_SIT  
+ Satisfied   :189   Very good    : 56  
+ Dissatisfied:800   Somewhat good:259  
+ NA's        :  6   Somewhat bad :266  
+                    Very bad     :406  
+                    NA's         :  8  
+                                       
+                                       
+                                                                          BELIEVE_GOD 
+ It is not necessary to believe in God in order to be moral and have good values: 73  
+ It is necessary to believe in God in order to be moral and have good values    :917  
+ NA's                                                                           :  5  
+                                                                                      
+                                                                                      
+                                                                                      
+                                                                                      
+                                                                             GLOBAL_COMMUNITY
+ Part of a global community that works together to solve problems                    :626    
+ Independent nations that compete with other countries and pursue their own interests:268    
+ Both                                                                                : 69    
+ Neither                                                                             :  2    
+ NA's                                                                                : 30    
+                                                                                             
+                                                                                             
+```
+
+---
+
+## Basic table
+
+* One weakness of R is how difficult it can be to create a well-formatted table 
+
+* Fortunately, the `table1` package was recently developed and makes it much easier
+
+* We can start with a simple table that shows the `SEX`, `AGE`, and `BETTER_GENDER` variables with their descriptive statistics
+
+
+```r
+table1(~ SEX + AGE + BETTER_GENDER,
+       data = globalData2019clean)
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=995)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>SEX</span></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Male</td>
+<td>572 (57.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Female</td>
+<td class='lastrow'>423 (42.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>How old were you at your last birthday?</span></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>32.3 (11.9)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Median [Min, Max]</td>
+<td>30.0 [18.0, 92.0]</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>1 (0.1%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>BETTER_GENDER</span></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Men</td>
+<td>448 (45.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Women</td>
+<td>231 (23.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Same/both equally</td>
+<td>283 (28.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>33 (3.3%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+---
+
+## Basic table with labels
+
+* Add labels for the variables and add the `BELIEVE_GOD` variable
+
+
+```r
+label(globalData2019clean$SEX) &lt;- "Sex"
+label(globalData2019clean$AGE) &lt;- "Age (years)" 
+label(globalData2019clean$BETTER_GENDER) &lt;- "Who has a better life in this country"
+label(globalData2019clean$BELIEVE_GOD) &lt;- "Which comes closest to your opinion"
+```
+
+---
+
+## Basic table with labels
+
+
+```r
+table1(~ SEX + AGE + BETTER_GENDER + BELIEVE_GOD,
+       data = globalData2019clean)
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=995)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Sex</span></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Male</td>
+<td>572 (57.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Female</td>
+<td class='lastrow'>423 (42.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Age (years)</span></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>32.3 (11.9)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Median [Min, Max]</td>
+<td>30.0 [18.0, 92.0]</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>1 (0.1%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Who has a better life in this country</span></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Men</td>
+<td>448 (45.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Women</td>
+<td>231 (23.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Same/both equally</td>
+<td>283 (28.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>33 (3.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Which comes closest to your opinion</span></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>It is not necessary to believe in God in order to be moral and have good values</td>
+<td>73 (7.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>It is necessary to believe in God in order to be moral and have good values</td>
+<td>917 (92.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>5 (0.5%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+---
+
+## Basic table with labels and grouped by sex
+
+* Move the `SEX` variable so it is used for grouping 
+
+
+```r
+table1(~ AGE + BETTER_GENDER + BELIEVE_GOD | SEX,
+       data = globalData2019clean)
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=572)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=423)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=995)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Age (years)</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>33.4 (12.6)</td>
+<td>30.9 (10.8)</td>
+<td>32.3 (11.9)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Median [Min, Max]</td>
+<td>31.0 [18.0, 92.0]</td>
+<td>28.0 [18.0, 79.0]</td>
+<td>30.0 [18.0, 92.0]</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>1 (0.2%)</td>
+<td class='lastrow'>0 (0%)</td>
+<td class='lastrow'>1 (0.1%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Who has a better life in this country</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Men</td>
+<td>280 (49.0%)</td>
+<td>168 (39.7%)</td>
+<td>448 (45.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Women</td>
+<td>127 (22.2%)</td>
+<td>104 (24.6%)</td>
+<td>231 (23.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Same/both equally</td>
+<td>148 (25.9%)</td>
+<td>135 (31.9%)</td>
+<td>283 (28.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>17 (3.0%)</td>
+<td class='lastrow'>16 (3.8%)</td>
+<td class='lastrow'>33 (3.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Which comes closest to your opinion</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>It is not necessary to believe in God in order to be moral and have good values</td>
+<td>45 (7.9%)</td>
+<td>28 (6.6%)</td>
+<td>73 (7.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>It is necessary to believe in God in order to be moral and have good values</td>
+<td>524 (91.6%)</td>
+<td>393 (92.9%)</td>
+<td>917 (92.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>3 (0.5%)</td>
+<td class='lastrow'>2 (0.5%)</td>
+<td class='lastrow'>5 (0.5%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+---
+
+## Basic table with labels, groups, and total
+
+* Change the title for the Overall column to **Total**
+
+
+```r
+table1(~ AGE + BETTER_GENDER + BELIEVE_GOD | SEX,
+       data = globalData2019clean, overall = "Total")
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=572)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=423)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Total<br><span class='stratn'>(N=995)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Age (years)</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>33.4 (12.6)</td>
+<td>30.9 (10.8)</td>
+<td>32.3 (11.9)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Median [Min, Max]</td>
+<td>31.0 [18.0, 92.0]</td>
+<td>28.0 [18.0, 79.0]</td>
+<td>30.0 [18.0, 92.0]</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>1 (0.2%)</td>
+<td class='lastrow'>0 (0%)</td>
+<td class='lastrow'>1 (0.1%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Who has a better life in this country</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Men</td>
+<td>280 (49.0%)</td>
+<td>168 (39.7%)</td>
+<td>448 (45.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Women</td>
+<td>127 (22.2%)</td>
+<td>104 (24.6%)</td>
+<td>231 (23.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Same/both equally</td>
+<td>148 (25.9%)</td>
+<td>135 (31.9%)</td>
+<td>283 (28.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>17 (3.0%)</td>
+<td class='lastrow'>16 (3.8%)</td>
+<td class='lastrow'>33 (3.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Which comes closest to your opinion</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>It is not necessary to believe in God in order to be moral and have good values</td>
+<td>45 (7.9%)</td>
+<td>28 (6.6%)</td>
+<td>73 (7.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>It is necessary to believe in God in order to be moral and have good values</td>
+<td>524 (91.6%)</td>
+<td>393 (92.9%)</td>
+<td>917 (92.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>3 (0.5%)</td>
+<td class='lastrow'>2 (0.5%)</td>
+<td class='lastrow'>5 (0.5%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+---
+
+## You Try It!
+
+* Copy and paste the label and table code from above into the empty R chunk
+
+* Add labels to the `COUNTRY_SATIS` and `ECON_SIT` variables (check the codebook to find these)
+
+* Add the `COUNTRY_SATIS` and `ECON_SIT` variables to the table 
+
+* Run the code to make sure it works
+
+
+
+---
+
+## Answer for You Try It!
+
+
+```r
+label(globalData2019clean$COUNTRY_SATIS) &lt;- "Satisfied or dissatisfied with the way things are going in our country "
+label(globalData2019clean$ECON_SIT) &lt;- "how would you describe the current economic situation in Nigeria" 
+```
+
+---
+
+## Answer for You Try It!
+
+
+```r
+table1(~ AGE + BETTER_GENDER + BELIEVE_GOD + COUNTRY_SATIS + ECON_SIT | SEX,
+       data = globalData2019clean, overall = "Total")
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Male<br><span class='stratn'>(N=572)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Female<br><span class='stratn'>(N=423)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Total<br><span class='stratn'>(N=995)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Age (years)</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>33.4 (12.6)</td>
+<td>30.9 (10.8)</td>
+<td>32.3 (11.9)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Median [Min, Max]</td>
+<td>31.0 [18.0, 92.0]</td>
+<td>28.0 [18.0, 79.0]</td>
+<td>30.0 [18.0, 92.0]</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>1 (0.2%)</td>
+<td class='lastrow'>0 (0%)</td>
+<td class='lastrow'>1 (0.1%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Who has a better life in this country</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Men</td>
+<td>280 (49.0%)</td>
+<td>168 (39.7%)</td>
+<td>448 (45.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Women</td>
+<td>127 (22.2%)</td>
+<td>104 (24.6%)</td>
+<td>231 (23.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Same/both equally</td>
+<td>148 (25.9%)</td>
+<td>135 (31.9%)</td>
+<td>283 (28.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>17 (3.0%)</td>
+<td class='lastrow'>16 (3.8%)</td>
+<td class='lastrow'>33 (3.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Which comes closest to your opinion</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>It is not necessary to believe in God in order to be moral and have good values</td>
+<td>45 (7.9%)</td>
+<td>28 (6.6%)</td>
+<td>73 (7.3%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>It is necessary to believe in God in order to be moral and have good values</td>
+<td>524 (91.6%)</td>
+<td>393 (92.9%)</td>
+<td>917 (92.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>3 (0.5%)</td>
+<td class='lastrow'>2 (0.5%)</td>
+<td class='lastrow'>5 (0.5%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Satisfied or dissatisfied with the way things are going in our country </span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Satisfied</td>
+<td>124 (21.7%)</td>
+<td>65 (15.4%)</td>
+<td>189 (19.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Dissatisfied</td>
+<td>445 (77.8%)</td>
+<td>355 (83.9%)</td>
+<td>800 (80.4%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>3 (0.5%)</td>
+<td class='lastrow'>3 (0.7%)</td>
+<td class='lastrow'>6 (0.6%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>how would you describe the current economic situation in Nigeria</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Very good</td>
+<td>36 (6.3%)</td>
+<td>20 (4.7%)</td>
+<td>56 (5.6%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Somewhat good</td>
+<td>160 (28.0%)</td>
+<td>99 (23.4%)</td>
+<td>259 (26.0%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Somewhat bad</td>
+<td>163 (28.5%)</td>
+<td>103 (24.3%)</td>
+<td>266 (26.7%)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Very bad</td>
+<td>209 (36.5%)</td>
+<td>197 (46.6%)</td>
+<td>406 (40.8%)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>4 (0.7%)</td>
+<td class='lastrow'>4 (0.9%)</td>
+<td class='lastrow'>8 (0.8%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+---
+
+## Using the ggplot2 package for plotting
+
+* Part of the `tidyverse` set of packages in R
+
+* `gg` stands for **grammar** of **graphics**
+
+* Plots created in `ggplot2` are built in layers 
+
+* Let's look at some examples
+
+* First, a bar chart...
+
+---
+
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-my_bar-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+* ggplot(aes(x = SEX))
+```
+]
+ 
+.panel2-my_bar-auto[
+![](viz_files/figure-html/my_bar_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Basic bar chart
+.panel1-my_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_bar-auto[
+![](viz_files/figure-html/my_bar_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+globalData2019clean %&gt;%
+* ggplot(aes(x = SEX))
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](viz_files/figure-html/my_bar_fancy_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX)) +
+* geom_bar(fill = "deeppink")
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](viz_files/figure-html/my_bar_fancy_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX)) +
+  geom_bar(fill = "deeppink") +
+* labs(x = "Sex",
+*      y = "Frequency",
+*      title = "Sex of 995 participants in a 2019 survey of people in Nigeria.")
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](viz_files/figure-html/my_bar_fancy_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart
+.panel1-my_bar_fancy-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX)) +
+  geom_bar(fill = "deeppink") +
+  labs(x = "Sex",
+       y = "Frequency",
+       title = "Sex of 995 participants in a 2019 survey of people in Nigeria.") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy-auto[
+![](viz_files/figure-html/my_bar_fancy_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy bar chart with colors
+.panel1-my_bar_fancy_colors-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-my_bar_fancy_colors-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy bar chart with colors
+.panel1-my_bar_fancy_colors-auto[
+
+```r
+globalData2019clean %&gt;%
+* ggplot(aes(x = SEX, fill = SEX))
+```
+]
+ 
+.panel2-my_bar_fancy_colors-auto[
+![](viz_files/figure-html/my_bar_fancy_colors_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart with colors
+.panel1-my_bar_fancy_colors-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_bar_fancy_colors-auto[
+![](viz_files/figure-html/my_bar_fancy_colors_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart with colors
+.panel1-my_bar_fancy_colors-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+* labs(x = "Sex",
+*      y = "Frequency",
+*      title = "Sex of 995 participants in a 2019 survey of people in Nigeria.")
+```
+]
+ 
+.panel2-my_bar_fancy_colors-auto[
+![](viz_files/figure-html/my_bar_fancy_colors_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart with colors
+.panel1-my_bar_fancy_colors-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+  labs(x = "Sex",
+       y = "Frequency",
+       title = "Sex of 995 participants in a 2019 survey of people in Nigeria.") +
+* scale_fill_brewer(palette = "Set2")
+```
+]
+ 
+.panel2-my_bar_fancy_colors-auto[
+![](viz_files/figure-html/my_bar_fancy_colors_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart with colors
+.panel1-my_bar_fancy_colors-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+  labs(x = "Sex",
+       y = "Frequency",
+       title = "Sex of 995 participants in a 2019 survey of people in Nigeria.") +
+  scale_fill_brewer(palette = "Set2") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy_colors-auto[
+![](viz_files/figure-html/my_bar_fancy_colors_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy_colors-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy_colors-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy_colors-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy bar chart without legend
+.panel1-my_bar_fancy_legend-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-my_bar_fancy_legend-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy bar chart without legend
+.panel1-my_bar_fancy_legend-auto[
+
+```r
+globalData2019clean %&gt;%
+* ggplot(aes(x = SEX, fill = SEX))
+```
+]
+ 
+.panel2-my_bar_fancy_legend-auto[
+![](viz_files/figure-html/my_bar_fancy_legend_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart without legend
+.panel1-my_bar_fancy_legend-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+* geom_bar()
+```
+]
+ 
+.panel2-my_bar_fancy_legend-auto[
+![](viz_files/figure-html/my_bar_fancy_legend_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart without legend
+.panel1-my_bar_fancy_legend-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+* labs(x = "Sex",
+*      y = "Frequency",
+*      title = "Sex of 995 participants in a 2019 survey of people in Nigeria.")
+```
+]
+ 
+.panel2-my_bar_fancy_legend-auto[
+![](viz_files/figure-html/my_bar_fancy_legend_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart without legend
+.panel1-my_bar_fancy_legend-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+  labs(x = "Sex",
+       y = "Frequency",
+       title = "Sex of 995 participants in a 2019 survey of people in Nigeria.") +
+* scale_fill_brewer(palette = "Set2")
+```
+]
+ 
+.panel2-my_bar_fancy_legend-auto[
+![](viz_files/figure-html/my_bar_fancy_legend_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart without legend
+.panel1-my_bar_fancy_legend-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+  labs(x = "Sex",
+       y = "Frequency",
+       title = "Sex of 995 participants in a 2019 survey of people in Nigeria.") +
+  scale_fill_brewer(palette = "Set2") +
+* theme_minimal()
+```
+]
+ 
+.panel2-my_bar_fancy_legend-auto[
+![](viz_files/figure-html/my_bar_fancy_legend_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy bar chart without legend
+.panel1-my_bar_fancy_legend-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, fill = SEX)) +
+  geom_bar() +
+  labs(x = "Sex",
+       y = "Frequency",
+       title = "Sex of 995 participants in a 2019 survey of people in Nigeria.") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+* theme(legend.position = "none")
+```
+]
+ 
+.panel2-my_bar_fancy_legend-auto[
+![](viz_files/figure-html/my_bar_fancy_legend_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-my_bar_fancy_legend-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-my_bar_fancy_legend-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-my_bar_fancy_legend-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## You try it!
+
+Make a bar chart of the `BETTER_GENDER` responses from survey participants with the Figure 1 code in your R Markdown file ().
+
+Edit the code to: 
+
+* Use `BETTER_GENDER` as the fill variable in the `ggplot()` layer
+
+* Change the color of the bars by replacing "Set2" with the name of another palette found on the &lt;a href = "https://www.datanovia.com/en/blog/the-a-z-of-rcolorbrewer-palette/"&gt;https://www.datanovia.com/en/blog/the-a-z-of-rcolorbrewer-palette/&lt;/a&gt; website
+
+* Add labels for the axes and a title inside the quote marks (see codebook for more about the question)
+
+* Replace `theme_minimal()` with another theme, you can find them here: https://ggplot2.tidyverse.org/reference/ggtheme.html
+
+When you have completed the changes, click the little green arrow on the top right of the code chunk to run the code.
+
+---
+
+count: false
+ 
+## Stacked bar plot
+.panel1-stacked_bar-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-stacked_bar-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Stacked bar plot
+.panel1-stacked_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+* drop_na(BETTER_GENDER)
+```
+]
+ 
+.panel2-stacked_bar-auto[
+
+```
+# A tibble: 962 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+ 9 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+10 Male      27 Men                   98 Satisfied     Very go… It is not neces…
+# … with 952 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Stacked bar plot
+.panel1-stacked_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+* ggplot(aes(x = BETTER_GENDER, fill = SEX))
+```
+]
+ 
+.panel2-stacked_bar-auto[
+![](viz_files/figure-html/stacked_bar_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Stacked bar plot
+.panel1-stacked_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+* geom_bar()
+```
+]
+ 
+.panel2-stacked_bar-auto[
+![](viz_files/figure-html/stacked_bar_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Stacked bar plot
+.panel1-stacked_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+  geom_bar() +
+* labs(x = "Who has better life",
+*      y = "Frequency",
+*      title = "Who has a better life by sex according to 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-stacked_bar-auto[
+![](viz_files/figure-html/stacked_bar_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Stacked bar plot
+.panel1-stacked_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+  geom_bar() +
+  labs(x = "Who has better life",
+       y = "Frequency",
+       title = "Who has a better life by sex according to 995 survey participants in Nigeria in 2019.") +
+* scale_fill_brewer(palette = "BuPu")
+```
+]
+ 
+.panel2-stacked_bar-auto[
+![](viz_files/figure-html/stacked_bar_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Stacked bar plot
+.panel1-stacked_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+  geom_bar() +
+  labs(x = "Who has better life",
+       y = "Frequency",
+       title = "Who has a better life by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "BuPu") +
+* theme_minimal()
+```
+]
+ 
+.panel2-stacked_bar-auto[
+![](viz_files/figure-html/stacked_bar_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-stacked_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-stacked_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-stacked_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-grouped_bar-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+* drop_na(BETTER_GENDER)
+```
+]
+ 
+.panel2-grouped_bar-auto[
+
+```
+# A tibble: 962 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+ 9 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+10 Male      27 Men                   98 Satisfied     Very go… It is not neces…
+# … with 952 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+* ggplot(aes(x = BETTER_GENDER, fill = SEX))
+```
+]
+ 
+.panel2-grouped_bar-auto[
+![](viz_files/figure-html/grouped_bar_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+* geom_bar(position = "dodge")
+```
+]
+ 
+.panel2-grouped_bar-auto[
+![](viz_files/figure-html/grouped_bar_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+  geom_bar(position = "dodge") +
+* labs(x = "Who has better life",
+*      y = "Frequency",
+*      title = "Who has a better life by sex according to 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-grouped_bar-auto[
+![](viz_files/figure-html/grouped_bar_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Who has better life",
+       y = "Frequency",
+       title = "Who has a better life by sex according to 995 survey participants in Nigeria in 2019.") +
+* scale_fill_brewer(palette = "BuPu", name = "Survey participant sex")
+```
+]
+ 
+.panel2-grouped_bar-auto[
+![](viz_files/figure-html/grouped_bar_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar-auto[
+
+```r
+globalData2019clean %&gt;%
+  drop_na(BETTER_GENDER) %&gt;%
+  ggplot(aes(x = BETTER_GENDER, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Who has better life",
+       y = "Frequency",
+       title = "Who has a better life by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "BuPu", name = "Survey participant sex") +
+* theme_minimal()
+```
+]
+ 
+.panel2-grouped_bar-auto[
+![](viz_files/figure-html/grouped_bar_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-grouped_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-grouped_bar-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-grouped_bar-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+## You Try It!
+
+* Create a grouped bar plot for Figure 2 with `BELIEVE_GOD` as the x-axis and `SEX` as the fill color 
+
+* Drop the `NA` values for `BELIEVE_GOD`
+
+* Add good labels for the x-axis, y-axis, title (may need the codebook for this)
+
+* Format it using a palette you like  
+
+* Fix the legend title so it is "Participant sex"
+
+
+```r
+# Figure 2 code goes here
+```
+
+
+---
+
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+*globalData2019clean
+```
+]
+ 
+.panel2-answerYti-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+* drop_na(BELIEVE_GOD)
+```
+]
+ 
+.panel2-answerYti-auto[
+
+```
+# A tibble: 990 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 980 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+* ggplot(aes(x = BELIEVE_GOD, fill = SEX))
+```
+]
+ 
+.panel2-answerYti-auto[
+![](viz_files/figure-html/answerYti_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+* geom_bar(position = "dodge")
+```
+]
+ 
+.panel2-answerYti-auto[
+![](viz_files/figure-html/answerYti_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+* labs(x = "Which is closest to your opinion",
+*      y = "Frequency",
+*      title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-answerYti-auto[
+![](viz_files/figure-html/answerYti_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Which is closest to your opinion",
+       y = "Frequency",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+* scale_fill_brewer(palette = "BuPu", name = "Survey participant sex")
+```
+]
+ 
+.panel2-answerYti-auto[
+![](viz_files/figure-html/answerYti_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Which is closest to your opinion",
+       y = "Frequency",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "BuPu", name = "Survey participant sex") +
+* theme_minimal()
+```
+]
+ 
+.panel2-answerYti-auto[
+![](viz_files/figure-html/answerYti_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Answer to You Try It!
+.panel1-answerYti-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Which is closest to your opinion",
+       y = "Frequency",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "BuPu", name = "Survey participant sex") +
+  theme_minimal()
+```
+]
+ 
+.panel2-answerYti-auto[
+![](viz_files/figure-html/answerYti_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-answerYti-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-answerYti-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-answerYti-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+*globalData2019clean
+```
+]
+ 
+.panel2-longlabs-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+* drop_na(BELIEVE_GOD)
+```
+]
+ 
+.panel2-longlabs-auto[
+
+```
+# A tibble: 990 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 980 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+* ggplot(aes(x = BELIEVE_GOD, fill = SEX))
+```
+]
+ 
+.panel2-longlabs-auto[
+![](viz_files/figure-html/longlabs_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+* geom_bar(position = "dodge")
+```
+]
+ 
+.panel2-longlabs-auto[
+![](viz_files/figure-html/longlabs_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+* labs(x = "Which is closest to your opinion",
+*      y = "Frequency",
+*      title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-longlabs-auto[
+![](viz_files/figure-html/longlabs_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Which is closest to your opinion",
+       y = "Frequency",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+* scale_fill_brewer(palette = "BuPu", name = "Survey participant sex")
+```
+]
+ 
+.panel2-longlabs-auto[
+![](viz_files/figure-html/longlabs_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Which is closest to your opinion",
+       y = "Frequency",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "BuPu", name = "Survey participant sex") +
+* theme_minimal()
+```
+]
+ 
+.panel2-longlabs-auto[
+![](viz_files/figure-html/longlabs_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Shorten long labels
+.panel1-longlabs-auto[
+
+```r
+# Figure 2 code goes here
+globalData2019clean %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, fill = SEX)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Which is closest to your opinion",
+       y = "Frequency",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "BuPu", name = "Survey participant sex") +
+  theme_minimal() +
+* scale_x_discrete(labels =
+*                    function(x)
+*                      str_wrap(x, width = 30))
+```
+]
+ 
+.panel2-longlabs-auto[
+![](viz_files/figure-html/longlabs_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-longlabs-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-longlabs-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-longlabs-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+
+---
+
+count: false
+ 
+## Group percentages
+.panel1-percents-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-percents-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Group percentages
+.panel1-percents-auto[
+
+```r
+globalData2019clean %&gt;%
+* group_by(BELIEVE_GOD, SEX)
+```
+]
+ 
+.panel2-percents-auto[
+
+```
+# A tibble: 995 x 8
+# Groups:   BELIEVE_GOD, SEX [6]
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Group percentages
+.panel1-percents-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+* count()
+```
+]
+ 
+.panel2-percents-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   BELIEVE_GOD, SEX [6]
+  BELIEVE_GOD                                                        SEX       n
+  &lt;fct&gt;                                                              &lt;fct&gt; &lt;int&gt;
+1 It is not necessary to believe in God in order to be moral and ha… Male     45
+2 It is not necessary to believe in God in order to be moral and ha… Fema…    28
+3 It is necessary to believe in God in order to be moral and have g… Male    524
+4 It is necessary to believe in God in order to be moral and have g… Fema…   393
+5 &lt;NA&gt;                                                               Male      3
+6 &lt;NA&gt;                                                               Fema…     2
+```
+]
+
+---
+count: false
+ 
+## Group percentages
+.panel1-percents-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+* group_by(BELIEVE_GOD)
+```
+]
+ 
+.panel2-percents-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   BELIEVE_GOD [3]
+  BELIEVE_GOD                                                        SEX       n
+  &lt;fct&gt;                                                              &lt;fct&gt; &lt;int&gt;
+1 It is not necessary to believe in God in order to be moral and ha… Male     45
+2 It is not necessary to believe in God in order to be moral and ha… Fema…    28
+3 It is necessary to believe in God in order to be moral and have g… Male    524
+4 It is necessary to believe in God in order to be moral and have g… Fema…   393
+5 &lt;NA&gt;                                                               Male      3
+6 &lt;NA&gt;                                                               Fema…     2
+```
+]
+
+---
+count: false
+ 
+## Group percentages
+.panel1-percents-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+* mutate(perc = 100 * (n / sum(n)))
+```
+]
+ 
+.panel2-percents-auto[
+
+```
+# A tibble: 6 x 4
+# Groups:   BELIEVE_GOD [3]
+  BELIEVE_GOD                                                  SEX       n  perc
+  &lt;fct&gt;                                                        &lt;fct&gt; &lt;int&gt; &lt;dbl&gt;
+1 It is not necessary to believe in God in order to be moral … Male     45  61.6
+2 It is not necessary to believe in God in order to be moral … Fema…    28  38.4
+3 It is necessary to believe in God in order to be moral and … Male    524  57.1
+4 It is necessary to believe in God in order to be moral and … Fema…   393  42.9
+5 &lt;NA&gt;                                                         Male      3  60  
+6 &lt;NA&gt;                                                         Fema…     2  40  
+```
+]
+
+&lt;style&gt;
+.panel1-percents-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-percents-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-percents-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+* group_by(BELIEVE_GOD, SEX)
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+
+```
+# A tibble: 995 x 8
+# Groups:   BELIEVE_GOD, SEX [6]
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+* count()
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   BELIEVE_GOD, SEX [6]
+  BELIEVE_GOD                                                        SEX       n
+  &lt;fct&gt;                                                              &lt;fct&gt; &lt;int&gt;
+1 It is not necessary to believe in God in order to be moral and ha… Male     45
+2 It is not necessary to believe in God in order to be moral and ha… Fema…    28
+3 It is necessary to believe in God in order to be moral and have g… Male    524
+4 It is necessary to believe in God in order to be moral and have g… Fema…   393
+5 &lt;NA&gt;                                                               Male      3
+6 &lt;NA&gt;                                                               Fema…     2
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+* group_by(BELIEVE_GOD)
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+
+```
+# A tibble: 6 x 3
+# Groups:   BELIEVE_GOD [3]
+  BELIEVE_GOD                                                        SEX       n
+  &lt;fct&gt;                                                              &lt;fct&gt; &lt;int&gt;
+1 It is not necessary to believe in God in order to be moral and ha… Male     45
+2 It is not necessary to believe in God in order to be moral and ha… Fema…    28
+3 It is necessary to believe in God in order to be moral and have g… Male    524
+4 It is necessary to believe in God in order to be moral and have g… Fema…   393
+5 &lt;NA&gt;                                                               Male      3
+6 &lt;NA&gt;                                                               Fema…     2
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+* mutate(perc = 100 * (n / sum(n)))
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+
+```
+# A tibble: 6 x 4
+# Groups:   BELIEVE_GOD [3]
+  BELIEVE_GOD                                                  SEX       n  perc
+  &lt;fct&gt;                                                        &lt;fct&gt; &lt;int&gt; &lt;dbl&gt;
+1 It is not necessary to believe in God in order to be moral … Male     45  61.6
+2 It is not necessary to believe in God in order to be moral … Fema…    28  38.4
+3 It is necessary to believe in God in order to be moral and … Male    524  57.1
+4 It is necessary to believe in God in order to be moral and … Fema…   393  42.9
+5 &lt;NA&gt;                                                         Male      3  60  
+6 &lt;NA&gt;                                                         Fema…     2  40  
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+* drop_na(BELIEVE_GOD)
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+
+```
+# A tibble: 4 x 4
+# Groups:   BELIEVE_GOD [2]
+  BELIEVE_GOD                                                  SEX       n  perc
+  &lt;fct&gt;                                                        &lt;fct&gt; &lt;int&gt; &lt;dbl&gt;
+1 It is not necessary to believe in God in order to be moral … Male     45  61.6
+2 It is not necessary to believe in God in order to be moral … Fema…    28  38.4
+3 It is necessary to believe in God in order to be moral and … Male    524  57.1
+4 It is necessary to believe in God in order to be moral and … Fema…   393  42.9
+```
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+* ggplot(aes(x = BELIEVE_GOD, y = perc, fill = SEX))
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+![](viz_files/figure-html/grouped_bar_perc_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, y = perc, fill = SEX)) +
+* geom_col(position = "dodge")
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+![](viz_files/figure-html/grouped_bar_perc_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, y = perc, fill = SEX)) +
+  geom_col(position = "dodge") +
+* labs(x = "Which captures your beliefs",
+*      y = "Percentage of belief group",
+*      title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+![](viz_files/figure-html/grouped_bar_perc_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, y = perc, fill = SEX)) +
+  geom_col(position = "dodge") +
+  labs(x = "Which captures your beliefs",
+       y = "Percentage of belief group",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+* scale_fill_brewer(palette = "Paired", name = "Survey participant sex")
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+![](viz_files/figure-html/grouped_bar_perc_auto_10_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, y = perc, fill = SEX)) +
+  geom_col(position = "dodge") +
+  labs(x = "Which captures your beliefs",
+       y = "Percentage of belief group",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "Paired", name = "Survey participant sex") +
+* theme_minimal()
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+![](viz_files/figure-html/grouped_bar_perc_auto_11_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Grouped bar plot
+.panel1-grouped_bar_perc-auto[
+
+```r
+globalData2019clean %&gt;%
+  group_by(BELIEVE_GOD, SEX) %&gt;%
+  count() %&gt;%
+  group_by(BELIEVE_GOD) %&gt;%
+  mutate(perc = 100 * (n / sum(n))) %&gt;%
+  drop_na(BELIEVE_GOD) %&gt;%
+  ggplot(aes(x = BELIEVE_GOD, y = perc, fill = SEX)) +
+  geom_col(position = "dodge") +
+  labs(x = "Which captures your beliefs",
+       y = "Percentage of belief group",
+       title = "Belief in God by sex according to 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "Paired", name = "Survey participant sex") +
+  theme_minimal() +
+* scale_x_discrete(labels =
+*                    function(x)
+*                      str_wrap(x, width = 30))
+```
+]
+ 
+.panel2-grouped_bar_perc-auto[
+![](viz_files/figure-html/grouped_bar_perc_auto_12_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-grouped_bar_perc-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-grouped_bar_perc-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-grouped_bar_perc-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Histogram
+.panel1-histogram-auto[
+
+```r
+# Histogram for age
+*globalData2019clean
+```
+]
+ 
+.panel2-histogram-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Histogram
+.panel1-histogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+* ggplot(aes(x = AGE))
+```
+]
+ 
+.panel2-histogram-auto[
+![](viz_files/figure-html/histogram_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Histogram
+.panel1-histogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+  ggplot(aes(x = AGE)) +
+* geom_histogram()
+```
+]
+ 
+.panel2-histogram-auto[
+![](viz_files/figure-html/histogram_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-histogram-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-histogram-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-histogram-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancy histogram
+.panel1-fancyhistogram-auto[
+
+```r
+# Histogram for age
+*globalData2019clean
+```
+]
+ 
+.panel2-fancyhistogram-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancy histogram
+.panel1-fancyhistogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+* ggplot(aes(x = AGE, fill = SEX))
+```
+]
+ 
+.panel2-fancyhistogram-auto[
+![](viz_files/figure-html/fancyhistogram_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy histogram
+.panel1-fancyhistogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+  ggplot(aes(x = AGE, fill = SEX)) +
+* geom_histogram(color = "white")
+```
+]
+ 
+.panel2-fancyhistogram-auto[
+![](viz_files/figure-html/fancyhistogram_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy histogram
+.panel1-fancyhistogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+  ggplot(aes(x = AGE, fill = SEX)) +
+  geom_histogram(color = "white") +
+* labs(x = "Participant age (years)",
+*      y = "Frequency",
+*      title = "Age distribution by sex for 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-fancyhistogram-auto[
+![](viz_files/figure-html/fancyhistogram_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy histogram
+.panel1-fancyhistogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+  ggplot(aes(x = AGE, fill = SEX)) +
+  geom_histogram(color = "white") +
+  labs(x = "Participant age (years)",
+       y = "Frequency",
+       title = "Age distribution by sex for 995 survey participants in Nigeria in 2019.") +
+* scale_fill_brewer(palette = "Set1")
+```
+]
+ 
+.panel2-fancyhistogram-auto[
+![](viz_files/figure-html/fancyhistogram_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy histogram
+.panel1-fancyhistogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+  ggplot(aes(x = AGE, fill = SEX)) +
+  geom_histogram(color = "white") +
+  labs(x = "Participant age (years)",
+       y = "Frequency",
+       title = "Age distribution by sex for 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "Set1") +
+* facet_grid(rows = vars(SEX))
+```
+]
+ 
+.panel2-fancyhistogram-auto[
+![](viz_files/figure-html/fancyhistogram_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancy histogram
+.panel1-fancyhistogram-auto[
+
+```r
+# Histogram for age
+globalData2019clean %&gt;%
+  ggplot(aes(x = AGE, fill = SEX)) +
+  geom_histogram(color = "white") +
+  labs(x = "Participant age (years)",
+       y = "Frequency",
+       title = "Age distribution by sex for 995 survey participants in Nigeria in 2019.") +
+  scale_fill_brewer(palette = "Set1") +
+  facet_grid(rows = vars(SEX)) +
+* theme_minimal()
+```
+]
+ 
+.panel2-fancyhistogram-auto[
+![](viz_files/figure-html/fancyhistogram_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-fancyhistogram-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-fancyhistogram-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-fancyhistogram-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Box plot
+.panel1-boxplot-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-boxplot-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Box plot
+.panel1-boxplot-auto[
+
+```r
+globalData2019clean %&gt;%
+* ggplot(aes(x = SEX, y = AGE))
+```
+]
+ 
+.panel2-boxplot-auto[
+![](viz_files/figure-html/boxplot_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Box plot
+.panel1-boxplot-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE)) +
+* geom_boxplot()
+```
+]
+ 
+.panel2-boxplot-auto[
+![](viz_files/figure-html/boxplot_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Box plot
+.panel1-boxplot-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE)) +
+  geom_boxplot() +
+* labs(x = "Participant sex",
+*      y = "Age",
+*      title = "Age by sex for 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-boxplot-auto[
+![](viz_files/figure-html/boxplot_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Box plot
+.panel1-boxplot-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE)) +
+  geom_boxplot() +
+  labs(x = "Participant sex",
+       y = "Age",
+       title = "Age by sex for 995 survey participants in Nigeria in 2019.") +
+* theme_minimal()
+```
+]
+ 
+.panel2-boxplot-auto[
+![](viz_files/figure-html/boxplot_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-boxplot-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-boxplot-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-boxplot-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+---
+
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-fancybox-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox-auto[
+
+```r
+globalData2019clean %&gt;%
+* ggplot(aes(x = SEX, y = AGE, color = SEX))
+```
+]
+ 
+.panel2-fancybox-auto[
+![](viz_files/figure-html/fancybox_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+* geom_violin()
+```
+]
+ 
+.panel2-fancybox-auto[
+![](viz_files/figure-html/fancybox_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+* geom_boxplot()
+```
+]
+ 
+.panel2-fancybox-auto[
+![](viz_files/figure-html/fancybox_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot() +
+* geom_jitter()
+```
+]
+ 
+.panel2-fancybox-auto[
+![](viz_files/figure-html/fancybox_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot() +
+  geom_jitter() +
+* labs(x = "Participant sex",
+*      y = "Age",
+*      title = "Age by sex for 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-fancybox-auto[
+![](viz_files/figure-html/fancybox_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot() +
+  geom_jitter() +
+  labs(x = "Participant sex",
+       y = "Age",
+       title = "Age by sex for 995 survey participants in Nigeria in 2019.") +
+* theme_minimal()
+```
+]
+ 
+.panel2-fancybox-auto[
+![](viz_files/figure-html/fancybox_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-fancybox-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-fancybox-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-fancybox-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+---
+
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+*globalData2019clean
+```
+]
+ 
+.panel2-fancybox2-auto[
+
+```
+# A tibble: 995 x 8
+   SEX      AGE BETTER_GENDER LADDER_NOW COUNTRY_SATIS ECON_SIT BELIEVE_GOD     
+   &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;              &lt;dbl&gt; &lt;fct&gt;         &lt;fct&gt;    &lt;fct&gt;           
+ 1 Female    22 Men                    5 Dissatisfied  Very bad It is necessary…
+ 2 Male      21 Men                    7 Dissatisfied  Somewha… It is not neces…
+ 3 Male      24 Same/both eq…         10 Dissatisfied  Very bad It is necessary…
+ 4 Male      23 Men                    1 Dissatisfied  Very bad It is necessary…
+ 5 Male      41 Men                    2 Dissatisfied  Very bad It is not neces…
+ 6 Male      34 Women                  9 Dissatisfied  Somewha… It is necessary…
+ 7 Male      18 Men                   10 Dissatisfied  Somewha… It is necessary…
+ 8 Male      38 &lt;NA&gt;                   3 Dissatisfied  Very bad It is necessary…
+ 9 Male      21 Same/both eq…          6 Dissatisfied  Very bad It is necessary…
+10 Female    25 Same/both eq…         10 Dissatisfied  Somewha… It is necessary…
+# … with 985 more rows, and 1 more variable: GLOBAL_COMMUNITY &lt;fct&gt;
+```
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+* ggplot(aes(x = SEX, y = AGE, color = SEX))
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_02_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+* geom_violin()
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_03_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+* geom_boxplot(width = .4)
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_04_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot(width = .4) +
+* geom_jitter(alpha = .3)
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_05_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot(width = .4) +
+  geom_jitter(alpha = .3) +
+* labs(x = "Participant sex",
+*      y = "Age",
+*      title = "Age by sex for 995 survey participants in Nigeria in 2019.")
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_06_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot(width = .4) +
+  geom_jitter(alpha = .3) +
+  labs(x = "Participant sex",
+       y = "Age",
+       title = "Age by sex for 995 survey participants in Nigeria in 2019.") +
+* scale_color_brewer(palette = "Dark2")
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_07_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot(width = .4) +
+  geom_jitter(alpha = .3) +
+  labs(x = "Participant sex",
+       y = "Age",
+       title = "Age by sex for 995 survey participants in Nigeria in 2019.") +
+  scale_color_brewer(palette = "Dark2") +
+* theme_minimal()
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_08_output-1.png)&lt;!-- --&gt;
+]
+
+---
+count: false
+ 
+## Fancier box plot
+.panel1-fancybox2-auto[
+
+```r
+globalData2019clean %&gt;%
+  ggplot(aes(x = SEX, y = AGE, color = SEX)) +
+  geom_violin() +
+  geom_boxplot(width = .4) +
+  geom_jitter(alpha = .3) +
+  labs(x = "Participant sex",
+       y = "Age",
+       title = "Age by sex for 995 survey participants in Nigeria in 2019.") +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() +
+* coord_flip()
+```
+]
+ 
+.panel2-fancybox2-auto[
+![](viz_files/figure-html/fancybox2_auto_09_output-1.png)&lt;!-- --&gt;
+]
+
+&lt;style&gt;
+.panel1-fancybox2-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-fancybox2-auto {
+  color: black;
+  width: 49%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-fancybox2-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+
+
+---
+
+## The end
+
+* Email me at [harrisj@wustl.edu](mailto:harrisj@wustl.edu)
+
+* Connect with me on Twitter [@jenineharris](https://twitter.com/jenineharris)
+
+
+
+
+&lt;!-- adjust font size in this css code chunk, currently 80 --&gt;
+
+&lt;style type="text/css"&gt;
+.remark-code{line-height: 1.5; font-size: 90%}
+
+@media print {
+  .has-continuation {
+    display: block;
+  }
+}
+
+code.r.hljs.remark-code{
+  position: relative;
+  overflow-x: hidden;
+}
+
+
+code.r.hljs.remark-code:hover{
+  overflow-x:visible;
+  width: 500px;
+  border-style: solid;
+}
+&lt;/style&gt;
+
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
